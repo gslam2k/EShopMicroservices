@@ -1,19 +1,15 @@
 ﻿namespace Catalog.API.Products.UpdateProduct;
 
 internal class UpdateProductCommandHandler(
-    IDocumentSession session,
-    ILogger<UpdateProductCommandHandler> logger)
+    IDocumentSession session)
     : ICommandHandler<UpdateProductCommand, UpdateProductResult>
 {
     private readonly IDocumentSession _session = session;
-    private readonly ILogger<UpdateProductCommandHandler> _logger = logger;
 
     public async Task<UpdateProductResult> Handle(UpdateProductCommand command, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("UpdateProductCommandHandler.Handle called with {@Command}", command);
-
         var product = await _session.LoadAsync<Product>(command.Id, cancellationToken).ConfigureAwait(false)
-            ?? throw new ProductNotFoundException();
+            ?? throw new ProductNotFoundException(command.Id);
 
         product.Name = command.Name;
         product.Description = command.Description;
@@ -25,6 +21,18 @@ internal class UpdateProductCommandHandler(
         await _session.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return new UpdateProductResult(true);
+    }
+}
+
+public class UpdateProductCommandValidator : AbstractValidator<UpdateProductCommand>
+{
+    public UpdateProductCommandValidator()
+    {
+        RuleFor(x => x.Id).NotEmpty().WithMessage("Id is required");
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required");
+        RuleFor(x => x.Categories).NotEmpty().WithMessage("Categories is required");
+        RuleFor(x => x.ImageFile).NotEmpty().WithMessage("ImageFile is required");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than 0");
     }
 }
 
