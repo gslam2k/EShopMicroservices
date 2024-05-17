@@ -8,6 +8,9 @@ services:
   distributedcache:
     image: redis
 
+  messagebroker:
+    image: rabbitmq:management
+
   orderdb:
     image: mcr.microsoft.com/mssql/server
 
@@ -29,8 +32,15 @@ services:
       context: .
       dockerfile: Services/Discount/Discount.Grpc/Dockerfile
 
+  yarpapigateway:
+    image: ${DOCKER_REGISTRY-}yarpapigateway
+    build:
+      context: .
+      dockerfile: ApiGateways/YarpApiGateway/Dockerfile
+
 volumes:
   postgres_catalog:
   postgres_basket:
+
 
 
